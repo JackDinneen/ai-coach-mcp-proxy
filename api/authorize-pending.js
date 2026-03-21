@@ -4,9 +4,10 @@ const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY ?? ''
 module.exports = async function handler(req, res) {
   try {
     const qs = new URLSearchParams(req.query).toString()
-    const upstream = await fetch(`${SUPABASE}/authorize${qs ? '?' + qs : ''}`, {
+    const url = `${SUPABASE}/authorize?${qs}&_format=json`
+
+    const upstream = await fetch(url, {
       headers: {
-        'Accept': 'application/json',
         'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
       },
     })
@@ -16,7 +17,6 @@ module.exports = async function handler(req, res) {
     try {
       data = JSON.parse(text)
     } catch {
-      // Return the raw body so we can diagnose
       return res.status(502).json({
         error: `Upstream returned non-JSON (HTTP ${upstream.status})`,
         upstream_body: text.slice(0, 1000),
