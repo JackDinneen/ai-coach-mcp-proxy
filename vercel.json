@@ -1,4 +1,12 @@
 {
+  "headers": [
+    {
+      "source": "/authorize",
+      "headers": [
+        { "key": "Content-Type", "value": "text/html; charset=utf-8" }
+      ]
+    }
+  ],
   "rewrites": [
     { "source": "/.well-known/oauth-authorization-server", "destination": "/api/well-known" },
     { "source": "/authorize", "destination": "/api/authorize" },
