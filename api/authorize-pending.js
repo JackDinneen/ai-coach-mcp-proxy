@@ -13,17 +13,24 @@ module.exports = async function handler(req, res) {
     })
 
     const text = await upstream.text()
-    let data
+
+    // Try JSON first (works once Supabase function is redeployed with _format=json)
     try {
-      data = JSON.parse(text)
+      const data = JSON.parse(text)
+      return res.status(upstream.status).json(data)
     } catch {
+      // Supabase returned the HTML form — extract pending_id from the inline script:
+      // const pid = "some-uuid";
+      const match = text.match(/const pid = "([^"]+)"/)
+      if (match) {
+        return res.status(200).json({ pending_id: match[1] })
+      }
+
       return res.status(502).json({
-        error: `Upstream returned non-JSON (HTTP ${upstream.status})`,
-        upstream_body: text.slice(0, 1000),
+        error: `Could not extract pending_id (HTTP ${upstream.status})`,
+        upstream_body: text.slice(0, 500),
       })
     }
-
-    res.status(upstream.status).json(data)
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
