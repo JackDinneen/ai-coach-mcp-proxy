@@ -1,9 +1,24 @@
+const SUPABASE = 'https://ddfqlkzmpjckblxwubaq.supabase.co/functions/v1/mcp-server'
+
 module.exports = async function handler(req, res) {
-  const { client_id, redirect_uri, code_challenge, code_challenge_method, state } = req.query
+  try {
+    const qs = new URLSearchParams(req.query).toString()
+    const upstream = await fetch(`${SUPABASE}/authorize${qs ? '?' + qs : ''}`, {
+      headers: { 'Accept': 'application/json' },
+    })
 
-  if (!client_id || !redirect_uri || !code_challenge || !code_challenge_method || !state) {
-    return res.status(400).json({ error: 'Missing required OAuth parameters' })
+    const text = await upstream.text()
+    let data
+    try {
+      data = JSON.parse(text)
+    } catch {
+      console.error('authorize-pending: upstream non-JSON', upstream.status, text.slice(0, 500))
+      return res.status(502).json({ error: 'Upstream returned non-JSON', status: upstream.status })
+    }
+
+    res.status(upstream.status).json(data)
+  } catch (err) {
+    console.error('authorize-pending error:', err)
+    res.status(500).json({ error: err.message })
   }
-
-  res.status(200).json({ status: 'pending' })
 }
