@@ -10,7 +10,9 @@ module.exports = async function handler(req, res) {
     body: req.method === 'POST' ? JSON.stringify(req.body) : undefined,
   })
 
-  const text = await upstream.text()
-  res.setHeader('Content-Type', upstream.headers.get('content-type') ?? 'text/html; charset=utf-8')
-  res.status(upstream.status).send(text)
+  const buffer = Buffer.from(await upstream.arrayBuffer())
+  const ct = upstream.headers.get('content-type') || 'text/html; charset=utf-8'
+
+  res.writeHead(upstream.status, { 'content-type': ct })
+  res.end(buffer)
 }
