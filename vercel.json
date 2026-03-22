@@ -1,6 +1,5 @@
 {
-  "rewrites": [
-    { "source": "/.well-known/oauth-authorization-server", "destination": "/api/well-known" },
-    { "source": "/(.*)", "destination": "https://ddfqlkzmpjckblxwubaq.supabase.co/functions/v1/mcp-server/$1" }
+  "routes": [
+    { "src": "/(.*)", "dest": "/api/proxy/$1" }
   ]
 }
