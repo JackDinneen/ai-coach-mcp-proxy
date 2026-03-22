@@ -14,6 +14,17 @@ export default async function handler(req, res) {
     body: ['GET', 'HEAD', 'OPTIONS'].includes(req.method) ? undefined : JSON.stringify(req.body),
   })
 
+  // Rewrite OAuth metadata so all endpoint URLs point to this proxy, not Supabase directly
+  if (path.startsWith('/.well-known/oauth-authorization-server')) {
+    const proxyBase = `https://${req.headers.host}`
+    const metadata = await upstream.json()
+    const rewritten = JSON.parse(
+      JSON.stringify(metadata).replaceAll(SUPABASE_MCP_URL, proxyBase)
+    )
+    res.status(upstream.status).json(rewritten)
+    return
+  }
+
   upstream.headers.forEach((value, key) => {
     if (!['content-encoding', 'transfer-encoding'].includes(key)) {
       res.setHeader(key, value)
