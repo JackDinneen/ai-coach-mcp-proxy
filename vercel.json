@@ -1,5 +1,5 @@
 {
-  "routes": [
-    { "src": "/(.*)", "dest": "/api/proxy/$1" }
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/api/proxy" }
   ]
 }
