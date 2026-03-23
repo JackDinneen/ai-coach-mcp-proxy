@@ -1,3 +1,5 @@
+import { Readable } from 'stream'
+
 const SUPABASE_MCP_URL = 'https://ddfqlkzmpjckblxwubaq.supabase.co/functions/v1/mcp-server'
 
 export default async function handler(req, res) {
@@ -22,11 +24,18 @@ export default async function handler(req, res) {
       }
     })
 
-    const body = await upstream.arrayBuffer()
     res.writeHead(upstream.status, responseHeaders)
-    res.end(Buffer.from(body))
+
+    // Stream through — SSE connections stay open so we must pipe, not buffer
+    if (upstream.body) {
+      Readable.fromWeb(upstream.body).pipe(res)
+    } else {
+      res.end()
+    }
   } catch (err) {
-    res.writeHead(502, { 'Content-Type': 'application/json' })
-    res.end(JSON.stringify({ error: 'proxy error', detail: err.message }))
+    if (!res.headersSent) {
+      res.writeHead(502, { 'Content-Type': 'application/json' })
+      res.end(JSON.stringify({ error: 'proxy error', detail: err.message }))
+    }
   }
 }
