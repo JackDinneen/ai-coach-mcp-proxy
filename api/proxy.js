@@ -39,5 +39,5 @@ export default async function handler(req, res) {
 
   res.status(upstream.status)
   const body = await upstream.text()
-  res.send(body)
+  res.end(body)
 }
